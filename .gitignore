@@ -1,0 +1,30 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Dataset
+data/
+
+# Virtual environment
+venv/
+backend/venv/
+env/
+.venv/
+
+# Model weights (large files)
+models/*.pth
+
+# Uploaded images
+uploads/
+
+# VS Code settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
