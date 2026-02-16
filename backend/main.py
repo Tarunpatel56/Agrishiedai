@@ -1,66 +1,90 @@
-from fastapi import FastAPI
-from database import engine
-from models import Base, WeatherData
-from weather_engine import fetch_weather
+from fastapi import FastAPI, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
+
 from sqlalchemy.orm import Session
-from fastapi import UploadFile, File
 import shutil
 import os
 
+from database import engine
+from models import Base, WeatherData
+from predict import predict_image
+from weather_engine import fetch_weather
+from risk_engine import calculate_risk
+from advisory_engine import generate_advisory
 
+# Create tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+
+# ------------------ ROOT ------------------
 @app.get("/")
 def root():
     return {"message": "AgriShield Backend Running 🚀"}
 
+
+# ------------------ WEATHER ------------------
 @app.get("/weather")
 def get_weather():
 
-    temp, rain, humidity = fetch_weather()
+    weather_data = fetch_weather()
 
     db = Session(bind=engine)
 
     weather_entry = WeatherData(
-        temperature=temp,
-        rainfall=rain,
-        humidity=humidity
+        temperature=weather_data.get("temperature"),
+        rainfall=0,
+        humidity=0
     )
 
     db.add(weather_entry)
     db.commit()
     db.close()
 
-    return {
-        "temperature": temp,
-        "rainfall": rain,
-        "humidity": humidity
-    }
-@app.post("/upload")
-def upload_image(file: UploadFile = File(...)):
+    return weather_data
+
+
+# ------------------ PREDICT ------------------
+@app.post("/predict")
+def predict(file: UploadFile = File(...)):
 
     upload_folder = "uploads"
+    os.makedirs(upload_folder, exist_ok=True)
 
-    if not os.path.exists(upload_folder):
-        os.makedirs(upload_folder)
+    file_path = os.path.join(upload_folder, file.filename)
 
-    file_location = os.path.join(upload_folder, file.filename)
-
-    with open(file_location, "wb") as buffer:
+    with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    db = Session(bind=engine)
+    # AI Prediction
+    result = predict_image(file_path)
 
-    new_image = CropImage(
-        file_name=file.filename,
-        file_path=file_location
+    # Weather Fetch
+    weather_data = fetch_weather()
+
+    # Risk Calculation
+    risk = calculate_risk(
+        result["health_score"],
+        weather_data.get("temperature")
     )
 
-    db.add(new_image)
-    db.commit()
-    db.close()
+    # Advisory
+    advisory = generate_advisory(
+        result["status"],
+        result["health_score"]
+    )
 
-    return {"message": "Image uploaded successfully", "file_name": file.filename}
-
+    return {
+        "prediction": result,
+        "weather": weather_data,
+        "risk_analysis": risk,
+        "advisory": advisory
+    }

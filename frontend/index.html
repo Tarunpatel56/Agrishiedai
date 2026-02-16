@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AgriShield AI Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <h1>🌾 AgriShield AI Ecosystem</h1>
+
+    <div class="upload-section">
+        <input type="file" id="imageInput">
+        <button onclick="uploadImage()">Analyze Crop</button>
+    </div>
+
+    <div id="dashboard" class="hidden">
+
+        <div class="card">
+            <h2>Crop Health</h2>
+            <p id="status"></p>
+            <div class="progress-bar">
+                <div id="healthBar" class="progress-fill"></div>
+            </div>
+            <p id="healthScore"></p>
+        </div>
+
+        <div class="card">
+            <h2>Growth Details</h2>
+            <p id="growthStage"></p>
+            <p id="estimatedAge"></p>
+        </div>
+
+        <div class="card">
+            <h2>Weather Conditions</h2>
+            <p id="temperature"></p>
+            <p id="windSpeed"></p>
+        </div>
+
+        <div class="card">
+            <h2>Risk Analysis</h2>
+            <p id="cropRisk"></p>
+            <p id="droughtRisk"></p>
+        </div>
+
+        <div class="card advisory">
+            <h2>Advisory</h2>
+            <p id="advisoryText"></p>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
